@@ -197,9 +197,12 @@ public class RecordAddController {
 			basicinfo.put("wdcs", StringUtils.isEmpty(dlx.get("dlx_wdcs"))?"0":dlx.get("dlx_wdcs"));
 			basicinfo.put("glyhscz", StringUtils.isEmpty(dlx.get("yh_scz"))?"0":dlx.get("yh_scz"));
 			//动力性
-			basicinfo.put("dlx", dlx.get("dlx_pd"));
-			basicinfo.put("rljjx", dlx.get("yh_pd"));
+			//basicinfo.put("dlx", dlx.get("dlx_pd"));
+			//basicinfo.put("rljjx", dlx.get("yh_pd"));
 		}
+		//动力性
+		basicinfo.put("dlx", params.get("dlx_pd"));
+		basicinfo.put("rljjx", params.get("yh_pd"));
 		
 		basicinfo.put("glyhxz", params.get("yhxz"));
 		
