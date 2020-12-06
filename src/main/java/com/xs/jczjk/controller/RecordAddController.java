@@ -74,7 +74,6 @@ public class RecordAddController {
 		if(strArr.length>0) {
 			String bpsStr = strArr[0].substring(strArr[0].indexOf("=")+1);
 			jsonArr = JSONArray.parseArray(bpsStr);
-			
 		}
 		//字典转化前缀
 		JSONArray zhqz = getParamByType(jsonArr,"zhqz");
@@ -149,11 +148,22 @@ public class RecordAddController {
 		basicinfo.put("dlyszh", params.get("dlyxzh"));
 		basicinfo.put("ywlb", getParamByTypeAndName(bpsArr,zhqz+"zjywlx",String.valueOf(params.get("zjywlx"))));
 		basicinfo.put("jcxb", params.get("jcxdh"));
-		basicinfo.put("jyrq", StringUtils.isEmpty(params.get("upLineDate")) ? "1900-01-01 00:00:00":formatDate(params.get("upLineDate").toString()));
+		
+		basicinfo.put("jyrq", StringUtils.isEmpty(params.get("uplinedate")) ? "1900-01-01 00:00:00":params.get("uplinedate"));
 		//记录单编号
 		basicinfo.put("jldbh", params.get("bgdbh"));
-		basicinfo.put("hphm", params.get("hphm"));
-		basicinfo.put("hpys", getParamByTypeAndName(bpsArr,zhqz+"cpys",String.valueOf(params.get("cpys"))));
+		System.out.println("号牌种类=============："+params.get("hpzl"));
+		if("16".equals(params.get("hpzl"))||"17".equals(params.get("hpzl"))) {
+			basicinfo.put("hphm", params.get("hphm")+"学");
+		}else {
+			basicinfo.put("hphm", params.get("hphm"));
+		}
+		
+		
+		
+		String hpys = getParamByTypeAndName(bpsArr,zhqz+"cpys",String.valueOf(params.get("cpys")));
+		System.out.println(String.valueOf(params.get("cpys")));
+		basicinfo.put("hpys", hpys.equals("")?"2":hpys);
 		basicinfo.put("hpxh", params.get("clxh"));
 		basicinfo.put("gcqychp", params.get("qychphm"));
 		basicinfo.put("clccrq", StringUtils.isEmpty(params.get("ccrq"))?"1900-01-01 00:00:00":formatDate(params.get("ccrq").toString()));
@@ -500,7 +510,8 @@ public class RecordAddController {
 		//检测开始时间
 		basicinfo.put("jckssj", StringUtils.isEmpty(params.get("dlsj"))?"1900-01-01 00:00:00":formatDate(params.get("dlsj").toString()));
 		//检测结束时间
-		basicinfo.put("jcjssj", "1900-01-01 00:00:00");
+		
+		
 		//检测结论
 		basicinfo.put("jcjl", params.get("zjjl"));
 		//合规性状态 1待检查 2通过 3不通过
@@ -510,9 +521,9 @@ public class RecordAddController {
 		//人工检验不合格项对应编号
 		//basicinfo.put("bhgbh", "1");
 		//汽油（柴油）车尾气排放数据开始时间
-		basicinfo.put("qcsbkssj", "1900-01-01 00:00:00");
+	//	basicinfo.put("qcsbkssj", "1900-01-01 00:00:00");
 		//汽油（柴油）车尾气排放数据结束时间
-		basicinfo.put("qcsbjssj", "1900-01-01 00:00:00");
+	//	basicinfo.put("qcsbjssj", "1900-01-01 00:00:00");
 		//柴油检测数据（K值）
 //		basicinfo.put("kdata", "");
 		//制动检测设备动作开始时间
@@ -523,6 +534,14 @@ public class RecordAddController {
 		basicinfo.put("dgjckssj", StringUtils.isEmpty(params.get("dgjckssj"))?"1900-01-01 00:00:00":params.get("dgjckssj"));//H
 		//灯光检测设备动作结束时间
 		basicinfo.put("dgjcjssj", StringUtils.isEmpty(params.get("dgjcjssj"))?"1900-01-01 00:00:00":params.get("dgjcjssj"));
+		
+		String jcjssj=null; 
+		
+		if(!StringUtils.isEmpty(StringUtils.isEmpty(params.get("dgjcjssj")))) {
+			basicinfo.put("jcjssj",StringUtils.isEmpty(params.get("dgjcjssj"))?"1900-01-01 00:00:00":params.get("dgjcjssj"));
+		}
+		
+		
 		if(!StringUtils.isEmpty(params.get("dlx"))) {
 			Map dlx = (Map)params.get("dlx");
 			//碳平衡油耗仪检测数据设备开始时间
@@ -533,10 +552,15 @@ public class RecordAddController {
 			basicinfo.put("dlxjckssj", StringUtils.isEmpty(dlx.get("kssj"))?"1900-01-01 00:00:00":dlx.get("kssj"));
 			//动力性检测数据设备结束时间
 			basicinfo.put("dlxjcjssj", StringUtils.isEmpty(dlx.get("jssj"))?"1900-01-01 00:00:00":dlx.get("jssj"));
+			if(!StringUtils.isEmpty(dlx.get("jssj"))) {
+				basicinfo.put("jcjssj",StringUtils.isEmpty(dlx.get("jssj"))?"1900-01-01 00:00:00":dlx.get("jssj"));
+				basicinfo.put("jyrq", StringUtils.isEmpty(dlx.get("jssj")) ? "1900-01-01 00:00:00":dlx.get("jssj"));
+			}
 		}
 		//性能检测不合格项对应编号
 //		basicinfo.put("xnbhgbh", "1");
 		//车辆技术等级评定结论
+		System.out.println(params.get("zjjl"));
 		basicinfo.put("cljspdjl", params.get("zjjl"));
 		//外检编号
 //		basicinfo.put("wjbh", "1");
@@ -565,7 +589,7 @@ public class RecordAddController {
 	public String formatDate(String mills) {
 		Date date = new Date();
 		date.setTime(Long.valueOf(mills));
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return sdf.format(date);
 	}
 	
