@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
@@ -22,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.xs.jczjk.manager.UploadZJOfHuNan;
 import com.xs.jczjk.util.FtpUtils;
 import com.xs.jczjk.util.QrCodeUtil;
 
@@ -61,13 +61,41 @@ public class RecordAddController {
 	@Value("${jcz.jczjyxkzh}")
 	private String jczjyxkzh;
 	
+	@Value("${jcz.local:js}")
+	private String local;
+	
+	@Autowired
+	private UploadZJOfHuNan uploadZJOfHuNan;
 	
 	@Autowired
     private RestTemplate restTemplate;
 	
+	
+	
 	@RequestMapping("/recordadd")  
     @ResponseBody  
-    public String recordadd(@RequestBody Map params) { 
+    public String recordadd(@RequestBody Map params) {
+		
+		if(local.equals("js")) {
+			 return recordaddJS(params);  
+		}
+		
+		if(local.equals("hn")) {
+			return "";
+		}
+		
+		
+		return null;
+       
+    }
+	
+	@RequestMapping("/getToken")  
+	public @ResponseBody String getToken() {
+		return this.uploadZJOfHuNan.getAccessToken();
+	}
+	
+	
+	public String recordaddJS(Map params) {
 		String str = restTemplate.getForEntity(vehUrl, String.class).getBody();
 		String[] strArr = str.split(";");
 		JSONArray jsonArr = new JSONArray();
@@ -104,9 +132,8 @@ public class RecordAddController {
 			}
 			System.out.println(result+" "+params.toString());
 		}
-		
-        return result;  
-    }
+		return result;
+	}
 
 	private JSONArray getParamByType(JSONArray jsonArr,String type) {
 		JSONArray retArr = new JSONArray();
