@@ -81,7 +81,7 @@ public class RecordAddController {
 		}
 		
 		if(local.equals("hn")) {
-			return "";
+			return recordaddHn(params);
 		}
 		
 		
@@ -89,9 +89,115 @@ public class RecordAddController {
        
     }
 	
+	/**
+	 * 湖南接口上传
+	 * @param params
+	 * @return
+	 */
+	public String recordaddHn(Map params) {
+		String str = restTemplate.getForEntity(vehUrl, String.class).getBody();
+		String[] strArr = str.split(";");
+		JSONArray jsonArr = new JSONArray();
+		if(strArr.length>0) {
+			String bpsStr = strArr[0].substring(strArr[0].indexOf("=")+1);
+			jsonArr = JSONArray.parseArray(bpsStr);
+		}
+		//字典转化前缀
+		JSONArray zhqz = getParamByType(jsonArr,"zhqz");
+		String qz = "";
+		if(zhqz.size() > 0) {
+			qz = zhqz.getJSONObject(0).getString("paramValue");
+		}
+		//////
+		//获取token
+		String tokenResult = this.uploadZJOfHuNan.getAccessToken();
+		JSONObject jsonObject = JSONObject.parseObject(tokenResult);
+		String token = "";
+		if("1".equals(jsonObject.get("code"))) {
+			token = jsonObject.getString("access_token");
+		}else {
+			return tokenResult;
+		}
+		
+		//获取机动车信息及检测流水号信息接口
+		JSONObject vehInfoJson = null;
+		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(params,token);
+		JSONObject lshJson = JSONObject.parseObject(lshResult);
+		
+		if("1".equals(lshJson.get("code"))) {
+			vehInfoJson = lshJson.getJSONObject("data");
+			//综检流水号
+			String detectSn = vehInfoJson.getString("detectSn");
+			params.put("zjlsh", detectSn);
+			
+			//上传接口数据
+			return uploadZJOfHuNan.shareDetectInfo(params, token, detectSn, jsonArr, qz);
+		}else {
+			return tokenResult;
+		}
+		
+		
+	}
+	
 	@RequestMapping("/getToken")  
 	public @ResponseBody String getToken() {
 		return this.uploadZJOfHuNan.getAccessToken();
+	}
+	
+	/**
+	 * 获取机动车信息及检测流水号信息接口
+	 * @param param
+	 * @return
+	 */
+	@RequestMapping("/getVehicleInfoAndDetectSn")  
+	public @ResponseBody String getVehicleInfoAndDetectSn(@RequestBody Map<String,String> param) {
+		//获取token
+		String tokenResult = this.uploadZJOfHuNan.getAccessToken();
+		JSONObject jsonObject = JSONObject.parseObject(tokenResult);
+		String token = "";
+		if("1".equals(jsonObject.get("code"))) {
+			token = jsonObject.getString("access_token");
+		}else {
+			return tokenResult;
+		}
+		
+		//获取机动车信息及检测流水号信息接口
+		JSONObject vehInfoJson = null;
+		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(param,token);
+		JSONObject lshJson = JSONObject.parseObject(lshResult);
+		
+		if("1".equals(lshJson.get("code"))) {
+			vehInfoJson = lshJson.getJSONObject("data");
+			//综检流水号
+			String detectSn = vehInfoJson.getString("detectSn");
+			return detectSn;
+		}else {
+			return tokenResult;
+		}
+		
+		
+	}
+	
+	/**
+	 * 检验检测机构基本信息交换与共享接口
+	 * @param param
+	 * @return
+	 */
+	@RequestMapping("/shareDetectionStationInfo")  
+	public @ResponseBody String shareDetectionStationInfo() {
+		//获取token
+		String tokenResult = this.uploadZJOfHuNan.getAccessToken();
+		JSONObject jsonObject = JSONObject.parseObject(tokenResult);
+		String token = "";
+		if("1".equals(jsonObject.get("code"))) {
+			token = jsonObject.getString("access_token");
+		}else {
+			return tokenResult;
+		}
+		
+		String lshResult = this.uploadZJOfHuNan.shareDetectionStationInfo(null,token);
+		
+		return lshResult;
 	}
 	
 	
