@@ -159,7 +159,7 @@ public class UploadZJOfHuNan {
 	 * @param token
 	 * @return
 	 */
-	public String shareVehicleInfo(Map<String,String> param,String token) {
+	public String shareVehicleInfo(Map<String,String> param,String token) {		
 		HttpHeaders headers = new HttpHeaders();
 		JSONObject jObject = new JSONObject();
 		jObject.put("dsId", companyId);
@@ -228,21 +228,21 @@ public class UploadZJOfHuNan {
 	public String shareDetectInfo(Map<String,Object> param,String token,String detectSn,JSONArray bpsArr,String zhqz) {
 		HttpHeaders headers = new HttpHeaders();
 		JSONObject jObject = new JSONObject();
-		
+		//System.out.println("数据1："+param);
 		JSONObject detectRecord = new JSONObject();
 		detectRecord.put("dsId", companyId);//检验检测机构唯一编码，见附录7.1detectRecord
 		detectRecord.put("dsName",companyname);//检验检测机构名称detectRecord
 		detectRecord.put("detectSn",param.get("zjlsh"));//检测流水号,见附录7.9detectRecord
 		detectRecord.put("detectType",getParamByTypeAndName(bpsArr,zhqz+"jcxz",String.valueOf(param.get("jcxz"))));//检测类别,见附录7.8detectRecord
 		detectRecord.put("detectDate",param.get("uplinedate"));//检测日期:YYYY-MM-DDhh:mm:ssdetectRecord
-		detectRecord.put("client",param.get(""));//委托人detectRecord
+		detectRecord.put("client",param.get("zjwtr"));//委托人detectRecord
 		detectRecord.put("vehicleNo",param.get("hphm"));//车牌号码detectRecord
 		detectRecord.put("plateColorCode",getParamByTypeAndName(bpsArr,zhqz+"cpys",String.valueOf(param.get("cpys"))));//车牌颜色代码，见附录7.3detectRecord
 		detectRecord.put("vinNo",param.get("clsbdh"));//车辆识别代码detectRecord
 		detectRecord.put("vehicleType",param.get("cllx"));//车辆类型：参照GA24.4detectRecord
 		detectRecord.put("engineNo",param.get("fdjh"));//发动机号码detectRecord
 		detectRecord.put("travelMileage",param.get("lcbds"));//行驶总里程，单位kmdetectRecord
-		detectRecord.put("fuelType",getParamByTypeAndName(bpsArr,zhqz+"rlzl",String.valueOf(param.get("rlzl"))));//燃油类别，参照JT/T697.7detectRecord
+		detectRecord.put("fuelType",param.get("rlzl"));//燃油类别，参照JT/T697.7detectRecord
 		detectRecord.put("steeringAxleAmount",param.get(""));//转向轴数，单位：轴detectRecord
 		detectRecord.put("detectLine",param.get("jcxdh"));//检测线别：规定值：大写英文字母detectRecord
 		detectRecord.put("busiType",getParamByTypeAndName(bpsArr,zhqz+"zjywlx",String.valueOf(param.get("zjywlx"))));//业务类型：规定值：申请、在用detectRecord
@@ -279,7 +279,7 @@ public class UploadZJOfHuNan {
 		detectRecord.put("parkAxle",param.get("zczw"));//驻车轴，用数字表示，作用在多轴时，各驻车轴数用“,”分开detectRecord
 		detectRecord.put("carriageSsideboardHeight",StringUtils.isEmpty(param.get("cxlbgd"))?"0":param.get("cxlbgd"));//单车车厢栏板高度，单位：mmdetectRecord
 		detectRecord.put("ssideboardHeightTrailer",param.get(""));//挂车车厢栏板高度，单位：mmdetectRecord
-		detectRecord.put("detectTotalCount",param.get(""));//总检次数，单位：次detectRecord
+		detectRecord.put("detectTotalCount",param.get("jycs"));//总检次数，单位：次detectRecord
 		
 		//燃料经济性
 		JSONObject fuelEconomy = new JSONObject();
@@ -333,14 +333,14 @@ public class UploadZJOfHuNan {
 			initData.add(yz);
 			
 			JSONObject yzAxle = new JSONObject();
-			jObject.put("axleSerialNo",1);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
-			jObject.put("axleBrakeRate",b1.get("kzxczdl"));//轴制动率，单位：%singleAxle
-			jObject.put("brakeUnbalanceRate",b1.get("kzbphl"));//制动不平衡率，单位：%singleAxle
-			jObject.put("leftMaxProcessDiff",b1.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
-			jObject.put("rightMaxProcessDiff",b1.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
-			jObject.put("leftRetardingForce",b1.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
-			jObject.put("rightRetardingForce",b1.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
-			jObject.put("evaluate",b1.get("zpd"));//判定，见附录7.11singleAxle
+			yzAxle.put("axleSerialNo",1);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
+			yzAxle.put("axleBrakeRate",b1.get("kzxczdl"));//轴制动率，单位：%singleAxle
+			yzAxle.put("brakeUnbalanceRate",b1.get("kzbphl"));//制动不平衡率，单位：%singleAxle
+			yzAxle.put("leftMaxProcessDiff",b1.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
+			yzAxle.put("rightMaxProcessDiff",b1.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
+			yzAxle.put("leftRetardingForce",b1.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
+			yzAxle.put("rightRetardingForce",b1.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
+			yzAxle.put("evaluate",b1.get("zpd"));//判定，见附录7.11singleAxle
 			singleAxle.add(yzAxle);
 		}
 		//二轴
@@ -364,14 +364,14 @@ public class UploadZJOfHuNan {
 			initData.add(ez);
 			
 			JSONObject yzAxle = new JSONObject();
-			jObject.put("axleSerialNo",2);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
-			jObject.put("axleBrakeRate",b2.get("kzxczdl"));//轴制动率，单位：%singleAxle
-			jObject.put("brakeUnbalanceRate",b2.get("kzbphl"));//制动不平衡率，单位：%singleAxle
-			jObject.put("leftMaxProcessDiff",b2.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
-			jObject.put("rightMaxProcessDiff",b2.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
-			jObject.put("leftRetardingForce",b2.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
-			jObject.put("rightRetardingForce",b2.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
-			jObject.put("evaluate",b2.get("zpd"));//判定，见附录7.11singleAxle
+			yzAxle.put("axleSerialNo",2);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
+			yzAxle.put("axleBrakeRate",b2.get("kzxczdl"));//轴制动率，单位：%singleAxle
+			yzAxle.put("brakeUnbalanceRate",b2.get("kzbphl"));//制动不平衡率，单位：%singleAxle
+			yzAxle.put("leftMaxProcessDiff",b2.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
+			yzAxle.put("rightMaxProcessDiff",b2.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
+			yzAxle.put("leftRetardingForce",b2.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
+			yzAxle.put("rightRetardingForce",b2.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
+			yzAxle.put("evaluate",b2.get("zpd"));//判定，见附录7.11singleAxle
 			singleAxle.add(yzAxle);
 		}
 		//三轴
@@ -395,14 +395,14 @@ public class UploadZJOfHuNan {
 			initData.add(sz);
 			
 			JSONObject yzAxle = new JSONObject();
-			jObject.put("axleSerialNo",3);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
-			jObject.put("axleBrakeRate",b3.get("kzxczdl"));//轴制动率，单位：%singleAxle
-			jObject.put("brakeUnbalanceRate",b3.get("kzbphl"));//制动不平衡率，单位：%singleAxle
-			jObject.put("leftMaxProcessDiff",b3.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
-			jObject.put("rightMaxProcessDiff",b3.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
-			jObject.put("leftRetardingForce",b3.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
-			jObject.put("rightRetardingForce",b3.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
-			jObject.put("evaluate",b3.get("zpd"));//判定，见附录7.11singleAxle
+			yzAxle.put("axleSerialNo",3);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
+			yzAxle.put("axleBrakeRate",b3.get("kzxczdl"));//轴制动率，单位：%singleAxle
+			yzAxle.put("brakeUnbalanceRate",b3.get("kzbphl"));//制动不平衡率，单位：%singleAxle
+			yzAxle.put("leftMaxProcessDiff",b3.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
+			yzAxle.put("rightMaxProcessDiff",b3.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
+			yzAxle.put("leftRetardingForce",b3.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
+			yzAxle.put("rightRetardingForce",b3.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
+			yzAxle.put("evaluate",b3.get("zpd"));//判定，见附录7.11singleAxle
 			singleAxle.add(yzAxle);
 		}
 		//四轴
@@ -426,14 +426,14 @@ public class UploadZJOfHuNan {
 			initData.add(sz);
 			
 			JSONObject yzAxle = new JSONObject();
-			jObject.put("axleSerialNo",4);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
-			jObject.put("axleBrakeRate",b4.get("kzxczdl"));//轴制动率，单位：%singleAxle
-			jObject.put("brakeUnbalanceRate",b4.get("kzbphl"));//制动不平衡率，单位：%singleAxle
-			jObject.put("leftMaxProcessDiff",b4.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
-			jObject.put("rightMaxProcessDiff",b4.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
-			jObject.put("leftRetardingForce",b4.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
-			jObject.put("rightRetardingForce",b4.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
-			jObject.put("evaluate",b4.get("zpd"));//判定，见附录7.11singleAxle
+			yzAxle.put("axleSerialNo",4);//轴序号(第几轴)，规定值：1、2、3、4、5、6singleAxle
+			yzAxle.put("axleBrakeRate",b4.get("kzxczdl"));//轴制动率，单位：%singleAxle
+			yzAxle.put("brakeUnbalanceRate",b4.get("kzbphl"));//制动不平衡率，单位：%singleAxle
+			yzAxle.put("leftMaxProcessDiff",b4.get("zzdlcd"));//过程差最大点（左轮），单位：daNsingleAxle
+			yzAxle.put("rightMaxProcessDiff",b4.get("yzdlcd"));//过程差最大点（右轮），单位：daNsingleAxle
+			yzAxle.put("leftRetardingForce",b4.get("zzzlf"));//车轮阻滞率（左轮），单位：%singleAxle
+			yzAxle.put("rightRetardingForce",b4.get("yzzlf"));//车轮阻滞率（右轮），单位：%singleAxle
+			yzAxle.put("evaluate",b4.get("zpd"));//判定，见附录7.11singleAxle
 			singleAxle.add(yzAxle);
 		}		
 		brake.put("initData", initData);
@@ -603,7 +603,7 @@ public class UploadZJOfHuNan {
 		
 		//灯光
 		JSONObject zwyg = new JSONObject();
-		zwyg.put("lampType",1);//灯类型，见附录7.12
+		zwyg.put("lampType","1");//灯类型，见附录7.12
 		if(!StringUtils.isEmpty(param.get("h1_j"))) {
 			Map h1_j = (Map)param.get("h1_j");
 						
@@ -627,7 +627,7 @@ public class UploadZJOfHuNan {
 		mainLamp.add(zwyg);
 		
 		JSONObject znyg = new JSONObject();
-		znyg.put("lampType",2);//灯类型，见附录7.12
+		znyg.put("lampType","2");//灯类型，见附录7.12
 		if(!StringUtils.isEmpty(param.get("h2_j"))) {
 			Map h2_j = (Map)param.get("h2_j");
 						
@@ -647,7 +647,7 @@ public class UploadZJOfHuNan {
 		mainLamp.add(znyg);
 		
 		JSONObject ywyg = new JSONObject();	
-		ywyg.put("lampType",3);//灯类型，见附录7.12
+		ywyg.put("lampType","3");//灯类型，见附录7.12
 		if(!StringUtils.isEmpty(param.get("h3_j"))) {
 			Map h3_j = (Map)param.get("h3_j");
 			
@@ -667,7 +667,7 @@ public class UploadZJOfHuNan {
 		mainLamp.add(ywyg);
 		
 		JSONObject ynyg = new JSONObject();	
-		ynyg.put("lampType",4);//灯类型，见附录7.12
+		ynyg.put("lampType","4");//灯类型，见附录7.12
 		if(!StringUtils.isEmpty(param.get("h4_j"))) {
 			Map h4_j = (Map)param.get("h4_j");
 			
@@ -728,8 +728,16 @@ public class UploadZJOfHuNan {
 //		jObject.put("detectData",param.get(""));//检测数据，各项格式参照GB18565detectReport
 //		jObject.put("standardValue",param.get(""));//标准限值，各项格式参照GB18565performanceItem
 //		jObject.put("evaluate",param.get(""));//判定：见附录7.11performanceItem
+		JSONObject detectReport = new JSONObject();
+		detectReport.put("detectResult", param.get("zjjl"));
 		
+		JSONObject trailerInfo = new JSONObject();
+		trailerInfo.put("vehicleNo", "无");
 		
+		detectReport.put("trailerInfo", trailerInfo);
+		detectReport.put("tractorInfo", new JSONObject());
+		
+		detectRecord.put("detectReport", detectReport);
 		detectRecord.put("mainLamp", mainLamp);
 		detectRecord.put("suspension", suspension);	
 		detectRecord.put("emission", emission);
@@ -743,9 +751,10 @@ public class UploadZJOfHuNan {
 		requestBody.put("Source", source);
 		requestBody.put("IPCType", "shareDetectInfo");
 		requestBody.put("IPCType.value", jObject.toJSONString());
+		System.out.println("param:"+requestBody);
 		HttpEntity<Map<String, String>> request = new HttpEntity<Map<String, String>>(requestBody, headers);
 	    String result =  restTemplate.postForObject(url+"/restapi/detecting/put_data;token="+token, request, String.class);	
-		
+	    System.out.println("result:"+result);
 		return result;		
 	}
 	
