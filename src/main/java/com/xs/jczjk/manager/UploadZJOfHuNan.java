@@ -1,8 +1,12 @@
 package com.xs.jczjk.manager;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -12,11 +16,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.xs.jczjk.util.Base64Utils;
 
 @Service
 public class UploadZJOfHuNan {
+	
+	Logger logger = Logger.getLogger(UploadZJOfHuNan.class);
 	
 	@Autowired
     private RestTemplate restTemplate;
@@ -43,7 +51,7 @@ public class UploadZJOfHuNan {
 		HttpHeaders headers = new HttpHeaders();
 		JSONObject jObject = new JSONObject();
 		jObject.put("username", "czjdc19");
-		jObject.put("password", "bG0eB3cD");		
+		jObject.put("password", "bG0eB3cD");	
 		
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		Map<String, String> requestBody = new HashMap();
@@ -131,13 +139,13 @@ public class UploadZJOfHuNan {
 	 * 6.7	获取机动车信息及检测流水号信息接口
 	 * @return
 	 */
-	public String getVehicleInfoAndDetectSn(Map<String,String> param,String token) {
+	public String getVehicleInfoAndDetectSn(Map<String,String> param,String token,JSONArray bpsArr,String zhqz) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		JSONObject jObject = new JSONObject();
 		jObject.put("dsId", companyId);
 		jObject.put("vehicleNo", param.get("hphm"));
-		jObject.put("plateColorCode", param.get("cpys"));
+		jObject.put("plateColorCode", getParamByTypeAndName(bpsArr,zhqz+"cpys",String.valueOf(param.get("cpys"))));
 		jObject.put("vinNo", param.get("clsbdh"));
 		Map<String, String> requestBody = new HashMap();
 		requestBody.put("CompanyId", companyId);
@@ -180,7 +188,7 @@ public class UploadZJOfHuNan {
 		jObject.put("trailerVehicleNo", param.get(""));//挂车牌照号码
 		jObject.put("transCertificateCode", param.get(""));//道路运输证号，新车可为空
 		jObject.put("transCertificateFirstDate", param.get(""));//道路运输证初领日期:YYYYMMDD
-		jObject.put("engineNo", param.get(""));//发动机号码
+		jObject.put("engineNo", param.get("fdjh"));//发动机号码
 		jObject.put("engineModel", param.get(""));//发动机型号
 		jObject.put("chassisNo", param.get(""));//底盘号码
 		jObject.put("productionDate", param.get(""));//出厂日期:YYYYMMDD
@@ -226,6 +234,9 @@ public class UploadZJOfHuNan {
 	 * @return
 	 */
 	public String shareDetectInfo(Map<String,Object> param,String token,String detectSn,JSONArray bpsArr,String zhqz) {
+		
+		SimpleDateFormat sdf =new SimpleDateFormat("yyyyMMdd");
+		
 		HttpHeaders headers = new HttpHeaders();
 		JSONObject jObject = new JSONObject();
 		//System.out.println("数据1："+param);
@@ -241,45 +252,71 @@ public class UploadZJOfHuNan {
 		detectRecord.put("vinNo",param.get("clsbdh"));//车辆识别代码detectRecord
 		detectRecord.put("vehicleType",param.get("cllx"));//车辆类型：参照GA24.4detectRecord
 		detectRecord.put("engineNo",param.get("fdjh"));//发动机号码detectRecord
-		detectRecord.put("travelMileage",param.get("lcbds"));//行驶总里程，单位kmdetectRecord
+		detectRecord.put("travelMileage",StringUtils.isEmpty(param.get("lcbds"))?"0":param.get("lcbds").toString());//行驶总里程，单位kmdetectRecord
 		detectRecord.put("fuelType",param.get("rlzl"));//燃油类别，参照JT/T697.7detectRecord
 		detectRecord.put("steeringAxleAmount",param.get(""));//转向轴数，单位：轴detectRecord
-		detectRecord.put("detectLine",param.get("jcxdh"));//检测线别：规定值：大写英文字母detectRecord
+		detectRecord.put("detectLine",getJcxdh(param.get("jcxdh").toString()));//检测线别：规定值：大写英文字母detectRecord
 		detectRecord.put("busiType",getParamByTypeAndName(bpsArr,zhqz+"zjywlx",String.valueOf(param.get("zjywlx"))));//业务类型：规定值：申请、在用detectRecord
 		detectRecord.put("transCertificateCode",param.get("dlyxzh"));//道路运输证号detectRecord
 		detectRecord.put("trailerVehicleNo",param.get(""));//挂车牌照号码detectRecord
 		detectRecord.put("trailerVehicleType",param.get(""));//挂车类型，参照GB/T3730.2detectRecord
-		detectRecord.put("productionDate",param.get("ccrq"));//出厂日期:YYYYMMDDdetectRecord
-		detectRecord.put("registDate",param.get("ccdjrq"));//注册日期:YYYYMMDDdetectRecord
+		
+		if(param.get("ccdjrq")!=null) {
+			long t =(long) param.get("ccdjrq");
+			Date ccdjrq = new Date(t);
+			detectRecord.put("productionDate",sdf.format(ccdjrq));//出厂日期:YYYYMMDDdetectRecord
+		}
+		
+		if(param.get("ccrq")!=null) {
+			long t =(long) param.get("ccrq");
+			Date ccrq = new Date(t);
+			detectRecord.put("registDate",sdf.format(ccrq));//注册日期:YYYYMMDDdetectRecord
+		}
+		
+		
+		
 		detectRecord.put("vehicleBrandModel",param.get("clxh"));//车辆型号：参照JT/T697.7detectRecord
 		detectRecord.put("vehicleBodyColor",param.get("csys"));//车身颜色，见附录7.3.2detectRecord
 		detectRecord.put("driveType",param.get("qdxs"));//驱动型式，如：4×2后驱detectRecord
 		detectRecord.put("vehicleSuspensionForm",param.get(""));//车辆悬架形式，参照JT/T697.7detectRecord
 		detectRecord.put("trailerVehicleAxleAmount",param.get(""));//挂车轴数，单位：轴detectRecord
-		detectRecord.put("compressIgnitEnginePower",param.get("gl"));//压燃式发动机额定功率，单位：kWdetectRecord
-		detectRecord.put("ratedTorque",param.get("ednj"));//点燃式额定扭矩detectRecord
-		detectRecord.put("ratedSpeedOfIgnit",param.get("edzs"));//点燃式额定转速detectRecord
-		detectRecord.put("driveWheelModel",param.get("ltlx"));//驱动轮轮胎规格型号detectRecord
-		detectRecord.put("totalWeight",StringUtils.isEmpty(param.get("zzl"))?"0":param.get("zzl"));//总质量，单位：kgdetectRecord
+		if(param.get("gl")!=null) {
+			detectRecord.put("compressIgnitEnginePower",param.get("gl").toString());
+		}
+		//压燃式发动机额定功率，单位：kWdetectRecord
+		detectRecord.put("ratedTorque",StringUtils.isEmpty(param.get("ednj"))?"0":param.get("ednj").toString());//点燃式额定扭矩detectRecord
+		detectRecord.put("ratedSpeedOfIgnit",StringUtils.isEmpty(param.get("edzs"))?"0":param.get("edzs").toString());//点燃式额定转速detectRecord
+		
+		if(param.get("ltlx")!=null) {
+			detectRecord.put("driveWheelModel",param.get("ltlx").toString());//驱动轮轮胎规格型号detectRecord
+		}
+		
+		
+		detectRecord.put("totalWeight",StringUtils.isEmpty(param.get("zzl"))?"0":param.get("zzl").toString());//总质量，单位：kgdetectRecord
 		detectRecord.put("vehicleHeight",param.get("cwkg"));//车高，单位：mmdetectRecord
-		detectRecord.put("frontTrack",StringUtils.isEmpty(param.get("qlj"))?"0":param.get("qlj"));//前轮距，单位：mmdetectRecord
+		
+		detectRecord.put("frontTrack",StringUtils.isEmpty(param.get("qlj"))?"0":param.get("qlj").toString());//前轮距，单位：mmdetectRecord
+		
 		detectRecord.put("vehicleLength",param.get("cwkc"));//客车车长，单位：mmdetectRecord
 		detectRecord.put("busTypeLevel",param.get("kcdj"));//客车类型与等级，参照JT/T697.7detectRecord
-		detectRecord.put("truckBodyType",param.get("hccsxs"));//货车车身型式detectRecord
+		if(param.get("hccsxs")!=null) {
+			detectRecord.put("truckBodyType",param.get("hccsxs").toString());//货车车身型式detectRecord
+		}
+		
 		detectRecord.put("driveAxleAmount",param.get(""));//驱动轴数，单位：轴detectRecord
 		detectRecord.put("driveAxleLoadMass",StringUtils.isEmpty(param.get("qdzkzzl"))?"0":param.get("qdzkzzl"));//驱动轴空载质量，单位:kgdetectRecord
 		detectRecord.put("totalWeightOfTractor",StringUtils.isEmpty(param.get("qycmzzl"))?"0":param.get("qycmzzl"));//牵引车满载总质量（最大允许总质量），单位:kgdetectRecord
 		detectRecord.put("shaftForm",param.get("bzzxs"));//并装轴形式，如：并装双轴、并装三轴等detectRecord
 		detectRecord.put("lampSystem",getQzdz(param.get("qzdz")));//前照灯制，规定值：二、四detectRecord
 		detectRecord.put("seatCount",StringUtils.isEmpty(param.get("kczws"))?"0":param.get("kczws"));//座位（铺）数，单位：位，客车必填，货车非必填detectRecord
-		detectRecord.put("mainVehicleAxleAmount",StringUtils.isEmpty(param.get("zs"))?"0":param.get("zs"));//单车（主车）轴数detectRecord
+		detectRecord.put("mainVehicleAxleAmount",StringUtils.isEmpty(param.get("zs"))?"0":param.get("zs").toString());//单车（主车）轴数detectRecord
 		detectRecord.put("overallSize",param.get("cwkc")+"×"+param.get("cwkk")+"×"+param.get("cwkg"));//单车外廓尺寸，格式：长×宽×高，单位：mmdetectRecord
 		detectRecord.put("overallSizeTrailer",param.get(""));//挂车外廓尺寸，格式：长×宽×高，单位：mmdetectRecord
-		detectRecord.put("farLightCanAdjust",2);//远光束能否单独调整detectRecord
+		detectRecord.put("farLightCanAdjust","否");//远光束能否单独调整detectRecord
 		detectRecord.put("parkAxle",param.get("zczw"));//驻车轴，用数字表示，作用在多轴时，各驻车轴数用“,”分开detectRecord
 		detectRecord.put("carriageSsideboardHeight",StringUtils.isEmpty(param.get("cxlbgd"))?"0":param.get("cxlbgd"));//单车车厢栏板高度，单位：mmdetectRecord
 		detectRecord.put("ssideboardHeightTrailer",param.get(""));//挂车车厢栏板高度，单位：mmdetectRecord
-		detectRecord.put("detectTotalCount",param.get("jycs"));//总检次数，单位：次detectRecord
+		detectRecord.put("detectTotalCount",param.get("jycs").toString());//总检次数，单位：次detectRecord
 		
 		//燃料经济性
 		JSONObject fuelEconomy = new JSONObject();
@@ -292,17 +329,21 @@ public class UploadZJOfHuNan {
 			power.put("ratedSpeed",StringUtils.isEmpty(dlx.get("dlx_edcs"))?"0":dlx.get("dlx_edcs"));//额定车速，单位：km/hpower
 			power.put("loadingForce",StringUtils.isEmpty(dlx.get("dlx_jzl"))?"0":dlx.get("dlx_jzl"));//加载力，单位：Npower
 			power.put("steadySpeed",StringUtils.isEmpty(dlx.get("dlx_wdcs"))?"0":dlx.get("dlx_wdcs"));//稳定车速，单位：km/hpower
-			power.put("evaluate",param.get(""));//判定：见附录7.11power
+			power.put("evaluate",getpd(param.get("dlx_pd").toString()));//判定：见附录7.11power
 			detectRecord.put("power",power);//动力性节点detectRecord
 			//动力性
 			//basicinfo.put("dlx", dlx.get("dlx_pd"));
 			//basicinfo.put("rljjx", dlx.get("yh_pd"));
-			
 			fuelEconomy.put("measuredValue", StringUtils.isEmpty(dlx.get("yh_scz"))?"0":dlx.get("yh_scz"));//实测值fuelEconomy
+			if(param.get("yh_pd")!=null&&!"0".equals(param.get("yh_pd"))) {
+				fuelEconomy.put("speedFuelPerHundredKm", param.get("yhxz"));//等速百公里油耗标准限值fuelEconomy
+				fuelEconomy.put("evaluate",getpd(param.get("yh_pd").toString()));//判定：见附录7.11fuelEconomy
+			}
 		}
 		
-		fuelEconomy.put("speedFuelPerHundredKm", param.get("yhxz"));//等速百公里油耗标准限值fuelEconomy
-		fuelEconomy.put("evaluate",param.get(""));//判定：见附录7.11fuelEconomy
+		
+		
+	
 		detectRecord.put("fuelEconomy", fuelEconomy);
 		//制动性
 		JSONObject brake = new JSONObject();
@@ -492,30 +533,30 @@ public class UploadZJOfHuNan {
 //		jObject.put("evaluate",param.get(""));//判定，见附录7.11vehicleSerial2
 		
 		//路试
-		if(!StringUtils.isEmpty(param.get("lsy"))) {
-			Map lsy = (Map)param.get("lsy");
-			JSONObject roadTest = new JSONObject();
-			
-			JSONObject driveBrake = new JSONObject();			
-			driveBrake.put("initialVelocity",lsy.get("zdcsd"));//初速度，单位：km/hdriveBrake
-			//driveBrake.put("laneWidth",param.get(""));//试车道宽度，单位：mdriveBrake
-			driveBrake.put("brakeDistance",lsy.get("xckzzdjl"));//制动距离，单位：mdriveBrake
-			driveBrake.put("mfdd",lsy.get("xckzmfdd"));//MFDD，单位：m/s2driveBrake
-			driveBrake.put("brakeStability",lsy.get("zdwdx"));//制动稳定性，规定值：稳定、不稳定driveBrake
-			driveBrake.put("brakeCoordinateTime",lsy.get("zdxtsj"));//汽车列车制动协调时间，driveBrake
-			driveBrake.put("evaluate",lsy.get("lsjg"));//判定，见附录7.11driveBrake
-			
-			roadTest.put("driveBrake", driveBrake);
-			//驻车制动
-			JSONObject parkBrake = new JSONObject();
-			parkBrake.put("parkSlope",lsy.get("zcpd"));//驻车坡度，单位：%parkBrake
-			parkBrake.put("parkResult",lsy.get("lszczdpd"));//不少于5min坡道驻车情况，规定值：溜坡、不溜坡parkBrake
-			parkBrake.put("evaluate",lsy.get("lszczdpd"));//判定，见附录7.11
-			
-			roadTest.put("parkBrake", parkBrake);
-			brake.put("roadTest", roadTest);
-			
-		}
+//		if(!StringUtils.isEmpty(param.get("lsy"))) {
+//			Map lsy = (Map)param.get("lsy");
+//			JSONObject roadTest = new JSONObject();
+//			
+//			JSONObject driveBrake = new JSONObject();			
+//			driveBrake.put("initialVelocity",lsy.get("zdcsd"));//初速度，单位：km/hdriveBrake
+//			//driveBrake.put("laneWidth",param.get(""));//试车道宽度，单位：mdriveBrake
+//			driveBrake.put("brakeDistance",lsy.get("xckzzdjl"));//制动距离，单位：mdriveBrake
+//			driveBrake.put("mfdd",lsy.get("xckzmfdd"));//MFDD，单位：m/s2driveBrake
+//			driveBrake.put("brakeStability",lsy.get("zdwdx"));//制动稳定性，规定值：稳定、不稳定driveBrake
+//			driveBrake.put("brakeCoordinateTime",lsy.get("zdxtsj"));//汽车列车制动协调时间，driveBrake
+//			driveBrake.put("evaluate",lsy.get("lsjg"));//判定，见附录7.11driveBrake
+//			
+//			roadTest.put("driveBrake", driveBrake);
+//			//驻车制动
+//			JSONObject parkBrake = new JSONObject();
+//			parkBrake.put("parkSlope",lsy.get("zcpd"));//驻车坡度，单位：%parkBrake
+//			parkBrake.put("parkResult",lsy.get("lszczdpd"));//不少于5min坡道驻车情况，规定值：溜坡、不溜坡parkBrake
+//			parkBrake.put("evaluate",lsy.get("lszczdpd"));//判定，见附录7.11
+//			
+//			roadTest.put("parkBrake", parkBrake);
+//			brake.put("roadTest", roadTest);
+//			
+//		}
 		
 		//排放性
 		JSONObject emission = new JSONObject();  //detectRecord
@@ -549,6 +590,8 @@ public class UploadZJOfHuNan {
 		emission.put("gasolineVehicle", gasolineVehicle);
 		
 		
+		
+		
 		//柴油车
 		JSONObject dieselVehicle = new JSONObject();
 		if(!StringUtils.isEmpty(param.get("yd"))) {
@@ -559,7 +602,7 @@ public class UploadZJOfHuNan {
 			dieselVehicle.put("ratio3",yd.get("d4clz"));//光吸收系数3，单位：m-1dieselVehicle
 			dieselVehicle.put("ratioBalance",yd.get("ydpjz"));//光吸收系数平均，单位：m-1dieselVehicle
 		}
-		emission.put("dieselVehicle", "dieselVehicle");
+		emission.put("dieselVehicle",dieselVehicle);
 		
 		
 		
@@ -626,45 +669,46 @@ public class UploadZJOfHuNan {
 		}
 		mainLamp.add(zwyg);
 		
-		JSONObject znyg = new JSONObject();
-		znyg.put("lampType","2");//灯类型，见附录7.12
-		if(!StringUtils.isEmpty(param.get("h2_j"))) {
-			Map h2_j = (Map)param.get("h2_j");
-						
-			znyg.put("farLightLampHight",h2_j.get("dg"));//灯高（远光），单位：mmmainLamp			
-			
-			znyg.put("nearLightVOffset",h2_j.get("czpy"));//近光偏移（垂直），单位：HmainLamp
-			znyg.put("nearLightHOffset",h2_j.get("sppc"));//近光偏移（水平），单位：mm/10mmainLamp
-		}
-		if(!StringUtils.isEmpty(param.get("h2_y"))) {
-			Map h2_y = (Map)param.get("h2_y");
-			
-			znyg.put("nearLightLampHight",h2_y.get("dg"));//灯高（近光），单位：mmmainLamp
-			znyg.put("farLightStrong",h2_y.get("gq"));//远光光强，单位：cdmainLamp
-			znyg.put("farLightVOffset",h2_y.get("czpy"));//远光偏移（垂直），单位：HmainLamp
-			znyg.put("farLightHOffset",h2_y.get("sppc"));//远光偏移（水平），单位：mm/10mmainLamp
-		}
-		mainLamp.add(znyg);
-		
-		JSONObject ywyg = new JSONObject();	
-		ywyg.put("lampType","3");//灯类型，见附录7.12
-		if(!StringUtils.isEmpty(param.get("h3_j"))) {
-			Map h3_j = (Map)param.get("h3_j");
-			
-			ywyg.put("farLightLampHight",h3_j.get("dg"));//灯高（远光），单位：mmmainLamp			
-			
-			ywyg.put("nearLightVOffset",h3_j.get("czpy"));//近光偏移（垂直），单位：HmainLamp
-			ywyg.put("nearLightHOffset",h3_j.get("sppc"));//近光偏移（水平），单位：mm/10mmainLamp
-		}
-		if(!StringUtils.isEmpty(param.get("h3_y"))) {
-			Map h3_y = (Map)param.get("h3_y");
-			
-			ywyg.put("nearLightLampHight",h3_y.get("dg"));//灯高（近光），单位：mmmainLamp
-			ywyg.put("farLightStrong",h3_y.get("gq"));//远光光强，单位：cdmainLamp
-			ywyg.put("farLightVOffset",h3_y.get("czpy"));//远光偏移（垂直），单位：HmainLamp
-			ywyg.put("farLightHOffset",h3_y.get("sppc"));//远光偏移（水平），单位：mm/10mmainLamp
-		}
-		mainLamp.add(ywyg);
+	
+//		if(!StringUtils.isEmpty(param.get("h2_j"))) {
+//			JSONObject znyg = new JSONObject();
+//			znyg.put("lampType","2");//灯类型，见附录7.12
+//			Map h2_j = (Map)param.get("h2_j");
+//						
+//			znyg.put("farLightLampHight",h2_j.get("dg"));//灯高（远光），单位：mmmainLamp			
+//			
+//			znyg.put("nearLightVOffset",h2_j.get("czpy"));//近光偏移（垂直），单位：HmainLamp
+//			znyg.put("nearLightHOffset",h2_j.get("sppc"));//近光偏移（水平），单位：mm/10mmainLamp
+//		}
+//		if(!StringUtils.isEmpty(param.get("h2_y"))) {
+//			Map h2_y = (Map)param.get("h2_y");
+//			
+//			znyg.put("nearLightLampHight",h2_y.get("dg"));//灯高（近光），单位：mmmainLamp
+//			znyg.put("farLightStrong",h2_y.get("gq"));//远光光强，单位：cdmainLamp
+//			znyg.put("farLightVOffset",h2_y.get("czpy"));//远光偏移（垂直），单位：HmainLamp
+//			znyg.put("farLightHOffset",h2_y.get("sppc"));//远光偏移（水平），单位：mm/10mmainLamp
+//		}
+//		mainLamp.add(znyg);
+//		
+//		JSONObject ywyg = new JSONObject();	
+//		ywyg.put("lampType","3");//灯类型，见附录7.12
+//		if(!StringUtils.isEmpty(param.get("h3_j"))) {
+//			Map h3_j = (Map)param.get("h3_j");
+//			
+//			ywyg.put("farLightLampHight",h3_j.get("dg"));//灯高（远光），单位：mmmainLamp			
+//			
+//			ywyg.put("nearLightVOffset",h3_j.get("czpy"));//近光偏移（垂直），单位：HmainLamp
+//			ywyg.put("nearLightHOffset",h3_j.get("sppc"));//近光偏移（水平），单位：mm/10mmainLamp
+//		}
+//		if(!StringUtils.isEmpty(param.get("h3_y"))) {
+//			Map h3_y = (Map)param.get("h3_y");
+//			
+//			ywyg.put("nearLightLampHight",h3_y.get("dg"));//灯高（近光），单位：mmmainLamp
+//			ywyg.put("farLightStrong",h3_y.get("gq"));//远光光强，单位：cdmainLamp
+//			ywyg.put("farLightVOffset",h3_y.get("czpy"));//远光偏移（垂直），单位：HmainLamp
+//			ywyg.put("farLightHOffset",h3_y.get("sppc"));//远光偏移（水平），单位：mm/10mmainLamp
+//		}
+//		mainLamp.add(ywyg);
 		
 		JSONObject ynyg = new JSONObject();	
 		ynyg.put("lampType","4");//灯类型，见附录7.12
@@ -729,23 +773,196 @@ public class UploadZJOfHuNan {
 //		jObject.put("standardValue",param.get(""));//标准限值，各项格式参照GB18565performanceItem
 //		jObject.put("evaluate",param.get(""));//判定：见附录7.11performanceItem
 		JSONObject detectReport = new JSONObject();
-		detectReport.put("detectResult", param.get("zjjl"));
+		
+		if(param.get("zjjl")!=null) {
+			String zjjl=(String)param.get("zjjl");
+			if(zjjl.equals("壹级车")) {
+				zjjl="一级";
+			}else if(zjjl.equals("贰级车")) {
+				zjjl="二级";
+			}
+			detectReport.put("detectResult", zjjl);
+		}
+		
+		
 		
 		JSONObject trailerInfo = new JSONObject();
 		trailerInfo.put("vehicleNo", "无");
 		
 		detectReport.put("trailerInfo", trailerInfo);
-		detectReport.put("tractorInfo", new JSONObject());
 		
-		detectRecord.put("detectReport", detectReport);
-		detectRecord.put("mainLamp", mainLamp);
+		
+		JSONObject  tractorInfo = new JSONObject();
+		
+		tractorInfo.put("vehicleNo", param.get("hphm"));
+		tractorInfo.put("vinNo", param.get("clsbdh"));
+		tractorInfo.put("engineNo", param.get("fdjh"));
+		tractorInfo.put("client", param.get("syr"));
+		
+		tractorInfo.put("client", param.get("syr"));
+		
+		tractorInfo.put("vehicleBrandModel",param.get("clpp1")+"/"+param.get("clxh"));
+		tractorInfo.put("administrativeAera", "");
+		
+		tractorInfo.put("vehicleType", param.get("cllx"));
+		tractorInfo.put("transCertificateCode", param.get("dlyszh"));
+		
+		
+		
+		
+		
+		if(param.get("ccdjrq")!=null) {
+			long t =(long) param.get("ccdjrq");
+			Date ccdjrq = new Date(t);
+			tractorInfo.put("registDate", sdf.format(ccdjrq));
+			
+		}
+		
+		if(param.get("ccrq")!=null) {
+			long t =(long) param.get("ccrq");
+			Date ccrq = new Date(t);
+			tractorInfo.put("productionDate", sdf.format(ccrq));
+			
+		}
+		
+		tractorInfo.put("driveLicense", "");
+		
+		
+		tractorInfo.put("vehicleBodyColor", param.get("cpys"));
+		detectReport.put("tractorInfo", tractorInfo);
+		detectReport.put("note", "123");
+		
+		
+		//detectReport.put("manualTestResult", );
+		
+		JSONArray manualTestResult = new JSONArray();
+		
+		for(int i=1;i<=6;i++) {
+			JSONObject mt =new JSONObject();
+			mt.put("detectCls", String.valueOf(i));
+			mt.put("evaluate", "0");
+			mt.put("unqualifiedItem", "无");
+			manualTestResult.add(mt);
+		}
+		detectReport.put("manualTestResult", manualTestResult);
+		
+		
+		List reports = (List)(param.get("reports"));
+		
+		String jsonTemp = JSON.toJSONString(param.get("reports"));
+		
+		JSONArray reportsArray =JSONArray.parseArray(jsonTemp);
+		
+		System.out.println("reports:="+reportsArray);
+		
+		JSONArray performanceItem =new JSONArray();
+		
+		for(int i=0;i<reportsArray.size();i++) {
+			JSONObject jo = reportsArray.getJSONObject(i);
+			System.out.println(jo.getString("yqjyxm").indexOf("驱动轮"));
+			System.out.println(jo.getString("yqjyxm").indexOf("经济性"));
+			System.out.println(jo.getString("yqjyxm").indexOf("喇叭"));
+			if(jo.getString("yqjyxm").indexOf("驱动轮")>=0) {
+				JSONObject item =new JSONObject();
+				item.put("itemCode", "power");
+				item.put("detectData", jo.getString("yqjyjg"));
+				item.put("standardValue", jo.getString("yqbzxz"));
+				item.put("evaluate", getpd(jo.getString("yqjgpd")));
+				performanceItem.add(item);
+			}
+			if(jo.getString("yqjyxm").indexOf("经济性")>=0) {
+				JSONObject item =new JSONObject();
+				item.put("itemCode", "economy");
+				item.put("detectData", jo.getString("yqjyjg"));
+				item.put("standardValue", jo.getString("yqbzxz"));
+				item.put("evaluate", getpd(jo.getString("yqjgpd")));
+				performanceItem.add(item);
+			}
+			if(jo.getString("yqjyxm").indexOf("喇叭")>=0) {
+				JSONObject item =new JSONObject();
+				item.put("itemCode", "horn_sound_pressure_level");
+				item.put("detectData", jo.getString("yqjyjg"));
+				item.put("standardValue", jo.getString("yqbzxz"));
+				item.put("evaluate", getpd(jo.getString("yqjgpd")));
+				performanceItem.add(item);
+			}
+		}
+		
+		if(param.get("s1")!=null) {
+			Map s1 = (Map) param.get("s1");
+			JSONObject item =new JSONObject();
+			item.put("itemCode", "speed_meter");
+			item.put("detectData", s1.get("speed").toString());
+			item.put("evaluate", getpd(s1.get("sdpd").toString()));
+			item.put("standardValue", "32.8~40");
+			performanceItem.add(item);
+		}
+		
+		detectReport.put("performanceItem", performanceItem);
+		
+		
+		
+		JSONArray singleItem = new JSONArray();
+		
+		if(param.get("s1")!=null) {
+			Map s1 = (Map) param.get("s1");
+			JSONObject item =new JSONObject();
+			item.put("itemCode", "measured_speed");
+			item.put("detectResult", s1.get("speed").toString());
+			item.put("evaluate", getpd(s1.get("sdpd").toString()));
+			singleItem.add(item);
+			JSONObject item1 =new JSONObject();
+			item1.put("itemCode", "speed_meter");
+			item1.put("detectResult", s1.get("speed").toString());
+			item1.put("evaluate", getpd(s1.get("sdpd").toString()));
+			
+			singleItem.add(item1);
+			
+		}
+		
+		if(param.get("dlx")!=null) {
+			Map dlx = (Map) param.get("dlx");
+			JSONObject item =new JSONObject();
+			item.put("itemCode", "constant_speed_fuel_consumption_per_hundred_kilometers");
+			item.put("detectResult", dlx.get("yh_scz").toString());
+			item.put("evaluate", getpd(dlx.get("yh_pd").toString()));
+			singleItem.add(item);
+		}
+		
+		if(param.get("sjj")!=null) {
+			Map sjj = (Map) param.get("sjj");
+			JSONObject item =new JSONObject();
+			item.put("itemCode", "horn_sound");
+			item.put("detectResult", sjj.get("fb").toString());
+			item.put("evaluate", getpd(sjj.get("zpd").toString()));
+			
+			JSONObject item1 =new JSONObject();
+			item1.put("itemCode", "horn_sound_pressure_level");
+			item1.put("detectResult", sjj.get("fb").toString());
+			item1.put("evaluate", getpd(sjj.get("zpd").toString()));
+			
+			singleItem.add(item);
+			singleItem.add(item1);
+		}
+		
+		detectRecord.put("singleItem", singleItem);
+		
+		//detectRecord.put(key, value)
+		
+		
+		//detectRecord.put("mainLamp", mainLamp);
 		detectRecord.put("suspension", suspension);	
 		detectRecord.put("emission", emission);
-		detectRecord.put("brake", brake);
+		//detectRecord.put("brake", brake);
 		//
 		jObject.put("detectRecord", detectRecord);
 		
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		jObject.put("detectReport", detectReport);
+		
+		jObject.put("image", new JSONArray());
+		jObject.put("video", new JSONArray());
+		
+		headers.setContentType(MediaType.APPLICATION_JSON); 
 		Map<String, String> requestBody = new HashMap();
 		requestBody.put("CompanyId", companyId);
 		requestBody.put("Source", source);
@@ -805,10 +1022,113 @@ public class UploadZJOfHuNan {
 	}
 
 	
+	private String getpd(String pd) {
+		
+		if("1级".equals(pd)) {
+			return "1";
+		}else if("2级".equals(pd)) {
+			return "2";
+		}else if("合格".equals(pd)) {
+			return "0";
+		}else if("不合格".equals(pd)) {
+			return "-1";
+		}else if("○".equals(pd)) {
+			return "0";
+		}else if("X".equals(pd)||"x".equals(pd)) {
+			return "-1";
+		}else if("1".equals(pd)) {
+			return "0";
+		}else if("2".equals(pd)) {
+			return "-1";
+		}
+		return pd;
+	}
+	
+	
+	private String getJcxdh(String jcxdh) {
+		if("1".equals(jcxdh)) {
+			return "A";
+		}else if("2".equals(jcxdh)) {
+			return "B";
+		}
+		else if("3".equals(jcxdh)) {
+			return "C";
+		}else if("4".equals(jcxdh)) {
+			return "D";
+		}else if("5".equals(jcxdh)) {
+			return "E";
+		}
+		
+		return jcxdh;
+	}
 	
 	
 	
+	public void uploadIamge(Map param,String path,String imgType,String token,JSONArray bpsArr,String zhqz) {
+		
+		String imageType =getImageType(imgType);
+		
+		if(imageType==null) {
+			return ;
+		}
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		JSONObject jObject = new JSONObject();
+		jObject.put("dsId", companyId);
+		jObject.put("vehicleNo", param.get("hphm"));
+		jObject.put("detectSn",param.get("zjlsh"));//检测流水号,见附录7.9detectRecord
+		jObject.put("plateColorCode", getParamByTypeAndName(bpsArr,zhqz+"cpys",String.valueOf(param.get("cpys"))));
+		jObject.put("vinNo", param.get("clsbdh"));
+		jObject.put("imageType", imageType);
+		
+		
+		String base64Image = Base64Utils.ImageToBase64ByLocal(path);
+		jObject.put("base64Image", base64Image);
+		
+		//logger.info("base64Image="+base64Image);
+		
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("CompanyId", companyId);
+		requestBody.put("Source", source);
+		 
+		String method="shareReportImage";
+		
+		String root = "reportImage";
+		
+		if(imgType.equals("zd")||imgType.equals("dg")||imgType.equals("dl")) {
+			method="sharePrintImage";
+			root="printImage";
+		}
+		System.out.println(method);
+		requestBody.put("IPCType", method);
+		requestBody.put("IPCType.value","{\""+root+"\":["+ jObject.toJSONString()+"]\r\n}");
+		
+		logger.info(requestBody);
+		HttpEntity<JSONObject> request = new HttpEntity<JSONObject>(requestBody, headers);
+	    String result =  restTemplate.postForObject(url+"/restapi/detecting/put_data;token="+token, request, String.class);
+	    
+	    System.out.println(result);
+	    
+		
+	}
 	
+	
+	public String getImageType(String type) {
+		
+		if(type.equals("zd")){
+			return "1";
+		}else if(type.equals("dg")) {
+			return "2";
+		}else if(type.equals("dl")) {
+			return "3";
+		}else if(type.equals("xsz")) {
+			return "3";
+		}else if(type.equals("ajbg")) {
+			return "1";
+		}
+		return null;
+		
+	}
 	
 	
 

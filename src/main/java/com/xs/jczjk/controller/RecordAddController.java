@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -70,6 +71,8 @@ public class RecordAddController {
 	@Autowired
     private RestTemplate restTemplate;
 	
+	Logger logger = Logger.getLogger(RecordAddController.class);
+	
 	
 	
 	@RequestMapping("/recordadd")  
@@ -121,7 +124,7 @@ public class RecordAddController {
 		
 		//获取机动车信息及检测流水号信息接口
 		JSONObject vehInfoJson = null;
-		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(params,token);
+		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(params,token,jsonArr, qz);
 		JSONObject lshJson = JSONObject.parseObject(lshResult);
 		
 		if("1".equals(lshJson.get("code"))) {
@@ -161,9 +164,23 @@ public class RecordAddController {
 			return tokenResult;
 		}
 		
+		String str = restTemplate.getForEntity(vehUrl, String.class).getBody();
+		String[] strArr = str.split(";");
+		JSONArray jsonArr = new JSONArray();
+		if(strArr.length>0) {
+			String bpsStr = strArr[0].substring(strArr[0].indexOf("=")+1);
+			jsonArr = JSONArray.parseArray(bpsStr);
+		}
+		//字典转化前缀
+		JSONArray zhqz = getParamByType(jsonArr,"zhqz");
+		String qz = "";
+		if(zhqz.size() > 0) {
+			qz = zhqz.getJSONObject(0).getString("paramValue");
+		}
+		
 		//获取机动车信息及检测流水号信息接口
 		JSONObject vehInfoJson = null;
-		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(param,token);
+		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(param,token,jsonArr, qz);
 		JSONObject lshJson = JSONObject.parseObject(lshResult);
 		
 		if("1".equals(lshJson.get("code"))) {
@@ -751,19 +768,88 @@ public class RecordAddController {
 
 	@RequestMapping("/uploadPhoto")  
     @ResponseBody  
-    public String uploadPhoto(@RequestBody Map params) throws IOException { 
-		FtpUtils ftpUtils = new FtpUtils();
-		Iterator it = params.keySet().iterator();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		String date = sdf.format(new Date());
-		String[] dateArr = date.split("-");
+    public String uploadPhoto(@RequestBody Map params) throws IOException {
+		
+		logger.info("上传照片："+params);
+		
+		if(local.equals("hn")) {
+			uploadHn(params);
+		
+		}else {
+			FtpUtils ftpUtils = new FtpUtils();
+			Iterator it = params.keySet().iterator();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			String date = sdf.format(new Date());
+			String[] dateArr = date.split("-");
+			while(it.hasNext()) {
+				String key = it.next().toString();
+				if(!"otherInfo".equals(key)) {
+					FTPClient ftpClient = initFtpClient();
+					String value = String.valueOf(params.get(key));
+					Map otherInfo = (Map) params.get("otherInfo");
+					
+					System.out.println("address:"+"/"+dateArr[0]+"/"+dateArr[1]+"/"+otherInfo.get("bgdbh"));
+					boolean uploadFile = ftpUtils.uploadFile("/"+dateArr[0]+"/"+dateArr[1]+"/"+params.get("bgdbh"), value, imageUrl+value, ftpClient);
+				}
+			}
+		}
+		
+		
+		
+		return "success";
+	}
+	
+	
+	public String uploadHn(Map imgMap) {
+		
+		Map params = (Map) imgMap.get("otherInfo");
+		
+		String str = restTemplate.getForEntity(vehUrl, String.class).getBody();
+		String[] strArr = str.split(";");
+		JSONArray jsonArr = new JSONArray();
+		if(strArr.length>0) {
+			String bpsStr = strArr[0].substring(strArr[0].indexOf("=")+1);
+			jsonArr = JSONArray.parseArray(bpsStr);
+		}
+		//字典转化前缀
+		JSONArray zhqz = getParamByType(jsonArr,"zhqz");
+		String qz = "";
+		if(zhqz.size() > 0) {
+			qz = zhqz.getJSONObject(0).getString("paramValue");
+		}
+		//////
+		//获取token
+		String tokenResult = this.uploadZJOfHuNan.getAccessToken();
+		JSONObject jsonObject = JSONObject.parseObject(tokenResult);
+		String token = "";
+		if("1".equals(jsonObject.get("code"))) {
+			token = jsonObject.getString("access_token");
+		}else {
+			return tokenResult;
+		}
+		
+		//获取机动车信息及检测流水号信息接口
+		JSONObject vehInfoJson = null;
+		String lshResult = this.uploadZJOfHuNan.getVehicleInfoAndDetectSn(params,token,jsonArr, qz);
+		JSONObject lshJson = JSONObject.parseObject(lshResult);
+		
+		if("1".equals(lshJson.get("code"))) {
+			vehInfoJson = lshJson.getJSONObject("data");
+			//综检流水号
+			String detectSn = vehInfoJson.getString("detectSn");
+			params.put("zjlsh", detectSn);
+		}
+		
+		Iterator it = imgMap.keySet().iterator();
+		
 		while(it.hasNext()) {
 			String key = it.next().toString();
-			if(!"bgdbh".equals(key)) {
-				FTPClient ftpClient = initFtpClient();
-				String value = String.valueOf(params.get(key));
-				System.out.println("address:"+"/"+dateArr[0]+"/"+dateArr[1]+"/"+params.get("bgdbh"));
-				boolean uploadFile = ftpUtils.uploadFile("/"+dateArr[0]+"/"+dateArr[1]+"/"+params.get("bgdbh"), value, imageUrl+value, ftpClient);
+			if(!"otherInfo".equals(key)) {
+				String value = String.valueOf(imgMap.get(key));
+				logger.info("key="+key);
+				logger.info("params.get(key)="+imgMap.get(key));
+				String path = imageUrl+value;
+				uploadZJOfHuNan.uploadIamge(params,path,key,token, jsonArr, qz);
 			}
 		}
 		
