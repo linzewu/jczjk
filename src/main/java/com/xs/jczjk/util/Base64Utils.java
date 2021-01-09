@@ -20,23 +20,23 @@ public class Base64Utils {
      * @param args
      * @throws Exception
      */
-    public static void main(String[] args) throws Exception {
- 
-        //图片--->base64
-        //本地图片
-        String url = "C:/Users/Administrator/Desktop/1.png";        
-        String str = Base64Utils.ImageToBase64ByLocal(url);
-        System.out.println(str);
-        
-        //在线图片地址
-        String string = "http://bpic.588ku.com//element_origin_min_pic/17/03/03/7bf4480888f35addcf2ce942701c728a.jpg";
-        String ste = Base64Utils.ImageToBase64ByOnline(string);
-        System.out.println(ste);
-        
-        //base64--->图片
-        Base64Utils.Base64ToImage(str,"C:/Users/Administrator/Desktop/test1.jpg");        
-        Base64Utils.Base64ToImage(ste, "C:/Users/Administrator/Desktop/test2.jpg");
-    }
+//    public static void main(String[] args) throws Exception {
+// 
+//        //图片--->base64
+//        //本地图片
+//        String url = "C:/Users/Administrator/Desktop/1.png";        
+//        String str = Base64Utils.ImageToBase64ByLocal(url);
+//        System.out.println(str);
+//        
+//        //在线图片地址
+//        String string = "http://bpic.588ku.com//element_origin_min_pic/17/03/03/7bf4480888f35addcf2ce942701c728a.jpg";
+//        String ste = Base64Utils.ImageToBase64ByOnline(string);
+//        System.out.println(ste);
+//        
+//        //base64--->图片
+//        Base64Utils.Base64ToImage(str,"C:/Users/Administrator/Desktop/test1.jpg");        
+//        Base64Utils.Base64ToImage(ste, "C:/Users/Administrator/Desktop/test2.jpg");
+//    }
  
     /**
      * 本地图片转换成base64字符串

@@ -325,6 +325,8 @@ public class UploadZJOfHuNan {
 			
 			
 			JSONObject power = new JSONObject();
+			
+			
 			power.put("standardPower",StringUtils.isEmpty(dlx.get("dlx_dbgl"))?"0":dlx.get("dlx_dbgl"));//达标功率，单位：kWpower
 			power.put("ratedSpeed",StringUtils.isEmpty(dlx.get("dlx_edcs"))?"0":dlx.get("dlx_edcs"));//额定车速，单位：km/hpower
 			power.put("loadingForce",StringUtils.isEmpty(dlx.get("dlx_jzl"))?"0":dlx.get("dlx_jzl"));//加载力，单位：Npower
@@ -952,7 +954,7 @@ public class UploadZJOfHuNan {
 		
 		//detectRecord.put("mainLamp", mainLamp);
 		detectRecord.put("suspension", suspension);	
-		detectRecord.put("emission", emission);
+	//	detectRecord.put("emission", emission);
 		//detectRecord.put("brake", brake);
 		//
 		jObject.put("detectRecord", detectRecord);
@@ -968,10 +970,10 @@ public class UploadZJOfHuNan {
 		requestBody.put("Source", source);
 		requestBody.put("IPCType", "shareDetectInfo");
 		requestBody.put("IPCType.value", jObject.toJSONString());
-		System.out.println("param:"+requestBody);
+		logger.info("param:"+requestBody);
 		HttpEntity<Map<String, String>> request = new HttpEntity<Map<String, String>>(requestBody, headers);
 	    String result =  restTemplate.postForObject(url+"/restapi/detecting/put_data;token="+token, request, String.class);	
-	    System.out.println("result:"+result);
+	    logger.info("result:"+result);
 		return result;		
 	}
 	
@@ -1103,7 +1105,7 @@ public class UploadZJOfHuNan {
 		requestBody.put("IPCType", method);
 		requestBody.put("IPCType.value","{\""+root+"\":["+ jObject.toJSONString()+"]\r\n}");
 		
-		logger.info(requestBody);
+		//logger.info(requestBody);
 		HttpEntity<JSONObject> request = new HttpEntity<JSONObject>(requestBody, headers);
 	    String result =  restTemplate.postForObject(url+"/restapi/detecting/put_data;token="+token, request, String.class);
 	    
@@ -1125,6 +1127,8 @@ public class UploadZJOfHuNan {
 			return "3";
 		}else if(type.equals("ajbg")) {
 			return "1";
+		}else if(type.equals("jybzzp")) {
+			return "2";
 		}
 		return null;
 		

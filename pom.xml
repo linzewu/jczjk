@@ -74,6 +74,11 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+					<encoding>UTF-8</encoding>
+					 <compilerArguments>
+                        <verbose />
+                        <bootclasspath>${java.home}/lib/rt.jar</bootclasspath>
+                    </compilerArguments>
 				</configuration>
 				<executions>
 					<execution>
